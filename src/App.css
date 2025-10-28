@@ -1,0 +1,17 @@
+@import url('https://fonts.cdnfonts.com/css/li-ador-noirrit');
+
+body {
+    min-height: 100dvh;
+    min-width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Li Ador Noirrit', sans-serif;
+    font-size: 2rem;
+
+    form {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+}
