@@ -1,153 +1,122 @@
 import { useState } from "react";
-import "./Form.css";
+import "./Form.css"
 
 function Form() {
   const [costPrice, setCostPrice] = useState<number | undefined>();
   const [rate, setRate] = useState<number | undefined>();
   const [deliveryCharge, setDeliveryCharge] = useState<number | undefined>();
-  const [result, setResult] = useState<number | undefined>();
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [profitMargin, setProfitMargin] = useState<number | undefined>();
+  const [baseResult, setBaseResult] = useState<number | undefined>();
+  const [finalResult, setFinalResult] = useState<number | undefined>();
 
-  const calculation = (costPrice?: number, rate?: number, deliveryCharge?: number) => {
-    if (!costPrice || !rate || !deliveryCharge) return undefined;
-    return costPrice / (rate / 100) + deliveryCharge;
+  const calculation = (
+    costPrice?: number,
+    rate?: number,
+    deliveryCharge?: number,
+    profitMargin?: number
+  ) => {
+    if (!costPrice || !rate || !deliveryCharge) return { base: undefined, final: undefined };
+
+    // মূল দাম (Base price)
+    const base = costPrice / (rate / 100) + deliveryCharge;
+
+    // লাভসহ দাম (With profit)
+    const final = profitMargin ? base * (1 + profitMargin / 100) : undefined;
+
+    return { base, final };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors: { [key: string]: string } = {};
-
-    if (!rate) newErrors.rate = "এই ঘরটি পূরণ করুন (রেট দরকার)";
-    if (!deliveryCharge) newErrors.deliveryCharge = "এই ঘরটি পূরণ করুন (বহন খরচ দরকার)";
-    if (!costPrice) newErrors.costPrice = "এই ঘরটি পূরণ করুন (দাম দরকার)";
-
-    setErrors(newErrors);
-
-    if (Object.keys(newErrors).length > 0) {
-      setResult(undefined);
-      return;
-    }
-
-    setResult(calculation(costPrice, rate, deliveryCharge));
+    const { base, final } = calculation(costPrice, rate, deliveryCharge, profitMargin);
+    setBaseResult(base);
+    setFinalResult(final);
   };
 
   const handleReset = () => {
     setCostPrice(undefined);
     setRate(undefined);
     setDeliveryCharge(undefined);
-    setResult(undefined);
-    setErrors({});
+    setProfitMargin(undefined);
+    setBaseResult(undefined);
+    setFinalResult(undefined);
   };
 
-  // Helper to handle numeric input safely
   const handleNumberChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    setter: React.Dispatch<React.SetStateAction<number | undefined>>,
-    field: string
+    setter: React.Dispatch<React.SetStateAction<number | undefined>>
   ) => {
     const value = e.target.value;
     setter(value === "" ? undefined : Number(value));
-
-    // Clear field-specific error when typing
-    setErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors[field];
-      return newErrors;
-    });
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ width: "100%" }}>
-      <div style={{ width: "100%" }}>
-        {/* Rate Input */}
-        <div style={{ display: "grid", width: "100%", marginBottom: "10px" }}>
-          <label>বর্তমান আইসি কত?</label>
+    <form onSubmit={handleSubmit} id="form">
+      <div>
+        <div className="form-group">
+          <label>বর্তমান আইসি রেট কত?</label>
+          <br />
           <input
             type="number"
             value={rate ?? ""}
-            onChange={(e) => handleNumberChange(e, setRate, "rate")}
+            onChange={(e) => handleNumberChange(e, setRate)}
             name="rate"
-            style={{
-              borderColor: errors.rate ? "red" : "#ccc",
-              outline: "none",
-              padding: "6px",
-              borderRadius: "5px",
-            }}
           />
-          {errors.rate && <span style={{ color: "red", fontSize: "0.9em" }}>{errors.rate}</span>}
         </div>
 
-        {/* Delivery Charge Input */}
-        <div style={{ display: "grid", width: "100%", marginBottom: "10px" }}>
+        <div className="form-group">
           <label>বহন খরচ?</label>
+          <br />
           <input
             type="number"
             value={deliveryCharge ?? ""}
-            onChange={(e) => handleNumberChange(e, setDeliveryCharge, "deliveryCharge")}
+            onChange={(e) => handleNumberChange(e, setDeliveryCharge)}
             name="deliveryCharge"
-            style={{
-              borderColor: errors.deliveryCharge ? "red" : "#ccc",
-              outline: "none",
-              padding: "6px",
-              borderRadius: "5px",
-            }}
           />
-          {errors.deliveryCharge && (
-            <span style={{ color: "red", fontSize: "0.9em" }}>{errors.deliveryCharge}</span>
-          )}
         </div>
 
-        {/* Cost Price Input */}
-        <div style={{ display: "grid", width: "100%", marginBottom: "10px" }}>
+        <div className="form-group">
           <label>দাম কত?</label>
+          <br />
           <input
             type="number"
             value={costPrice ?? ""}
-            onChange={(e) => handleNumberChange(e, setCostPrice, "costPrice")}
+            onChange={(e) => handleNumberChange(e, setCostPrice)}
             name="costPrice"
-            style={{
-              borderColor: errors.costPrice ? "red" : "#ccc",
-              outline: "none",
-              padding: "6px",
-              borderRadius: "5px",
-            }}
           />
-          {errors.costPrice && (
-            <span style={{ color: "red", fontSize: "0.9em" }}>{errors.costPrice}</span>
-          )}
         </div>
 
-        {/* Buttons */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", marginTop: "20px", gap: "10px" }}>
-          <button
-            type="submit"
-            style={{ backgroundColor: "#004c3f", color: "#fffff0", padding: "10px", borderRadius: "5px" }}
-          >
-            হিসাব করুন
-          </button>
+        <div className="form-group">
+          <label>লাভের হার (%) — ঐচ্ছিক</label>
+          <br />
+          <input
+            type="number"
+            placeholder="যেমন 20"
+            value={profitMargin ?? ""}
+            onChange={(e) => handleNumberChange(e, setProfitMargin)}
+            name="profitMargin"
+          />
+        </div>
+
+        <div style={{ marginTop: "10px" }}>
+          <button type="submit">কেল্কুলেট</button>
           <button
             type="button"
             onClick={handleReset}
-            style={{ backgroundColor: "#e05656", color: "#fffff0", padding: "10px", borderRadius: "5px" }}
+            style={{ marginLeft: "10px" }}
           >
             মুছুন
           </button>
         </div>
 
-        {/* Result */}
-        {result !== undefined && (
+        {(baseResult !== undefined || finalResult !== undefined) && (
           <div style={{ marginTop: "15px" }}>
-            <h2
-              style={{
-                backgroundColor: "#004c3f",
-                color: "#fffff0",
-                padding: "10px",
-                borderRadius: "10px",
-                textAlign: "center",
-              }}
-            >
-              ফলাফল: {result}
-            </h2>
+            {baseResult !== undefined && (
+              <h3>মূল দাম: {baseResult.toFixed(2)}</h3>
+            )}
+            {finalResult !== undefined && (
+              <h3 style={{ color: "green" }}>লাভসহ দাম: {finalResult.toFixed(2)}</h3>
+            )}
           </div>
         )}
       </div>
